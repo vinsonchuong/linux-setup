@@ -53,7 +53,7 @@
   ```
 * Make `/boot` bootable via UEFI:
   ```sh
-  efibootmgr -d /dev/sda -p 1 -c -L 'Arch Linux' -l /vmlinuz-linux -u 'root=/dev/sda2 rw initrd=/intel-ucode.img initrd=/initramfs-linux.img'
+  efibootmgr -d /dev/sda -p 1 -c -L 'Arch Linux' -l '/vmlinuz-linux' -u 'root=/dev/sda2 rw initrd=/intel-ucode.img initrd=/initramfs-linux.img'
   INSTALLER=$(efibootmgr | awk '/BootCurrent/ {print $2}')
   OS=$(efibootmgr | awk '/Arch Linux/ {print $1}' | sed 's/^Boot\([^*]*\).*$/\1/')
   efibootmgr -O
