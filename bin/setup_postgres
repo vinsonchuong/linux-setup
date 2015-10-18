@@ -1,0 +1,18 @@
+#!/bin/bash -e
+cd '/tmp'
+if [ -d '/var/lib/postgres/data' ]
+then
+	mv /var/lib/postgres/{data,data-old}
+	mkdir '/var/lib/postgres/data'
+	chown 'postgres:postgres' '/var/lib/postgres/data'
+	su postgres <<-EOF
+	initdb -D /var/lib/postgres/data
+	pg_upgrade -b /opt/pgsql-*/bin/ -B /usr/bin/ -d /var/lib/postgres/data-old -D /var/lib/postgres/data
+	./delete_old_cluster.sh
+	rm -f 'delete_old_cluster.sh' 'analyze_new_cluster.sh'
+	EOF
+else
+	mkdir '/var/lib/postgres/data'
+	chown 'postgres:postgres' '/var/lib/postgres/data'
+	su postgres -c "initdb -D /var/lib/postgres/data && createuser -dw '$(id -un)'"
+fi

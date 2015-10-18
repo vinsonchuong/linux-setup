@@ -1,0 +1,13 @@
+#!/bin/bash -e
+IMAGE_NAME=$1
+USB_DEVICE=$2
+
+echo "Writing $IMAGE_NAME to $USB_DEVICE..."
+
+curl -o /tmp/bios.iso "http://download.lenovo.com/ibmdl/pub/pc/pccbbs/mobiles/$IMAGE_NAME"
+
+aura -Aya --noconfirm geteltorito
+geteltorito.pl -o /tmp/bios.img /tmp/bios.iso
+dd bs=4M if='/tmp/bios.img' of="$USB_DEVICE" && sync
+rm /tmp/bios.{iso,img}
+aura -Rcns --noconfirm geteltorito

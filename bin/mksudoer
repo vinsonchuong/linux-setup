@@ -1,0 +1,11 @@
+#!/bin/bash -e
+USERNAME="$1"
+
+useradd -m -G 'users,wheel,libvirt' -s /bin/zsh "$USERNAME"
+passwd "$USERNAME"
+cd "/home/$USERNAME"
+rm .bash{_logout,_profile,rc}
+
+echo '%wheel ALL=(ALL) ALL' >> /etc/sudoers.d/privileges
+chmod 0440 /etc/sudoers.d/privileges
+passwd -l root
