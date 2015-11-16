@@ -126,7 +126,7 @@ pacstrap /mnt base base-devel \
   ```sh
   bash <(curl aur.sh) --asroot --noconfirm -si aura-bin 
   rm -rf aura-bin
-  aura --noconfirm -Aya hostsblock kwakd gtk-theme-numix-solarized \
+  aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
     dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
     virt-viewer insync bats-git
   ```
@@ -143,7 +143,7 @@ pacstrap /mnt base base-devel \
   ```sh
   systemctl enable systemd-networkd systemd-networkd-wait-online \
     systemd-resolved systemd-timesyncd nftables haveged tlp tlp-sleep \
-    lightdm hostsblock.timer kwakd postgresql libvirtd
+    lightdm hostsblock.timer postgresql libvirtd
   ```
 * Setup PostgreSQL:
   ```sh
