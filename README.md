@@ -104,7 +104,7 @@ pacstrap /mnt base base-devel \
   transmission-cli \
   jre7-openjdk cmake ctags \
   namcap pkgbuild-introspection burp \
-  zsh zsh-completions git hub openssh rxvt-unicode tmux vim neovim firefox chromium flashplugin gimp pass di colordiff the_silver_searcher \
+  zsh zsh-completions git hub openssh rxvt-unicode tmux vim neovim python-neovim xclip firefox chromium flashplugin gimp pass di colordiff the_silver_searcher \
   zathura zathura-djvu zathura-pdf-mupdf zathura-ps \
   feh mpv beets python2-pylast python2-requests imagemagick \
   postgresql postgresql-old-upgrade nodejs npm \
