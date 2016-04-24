@@ -126,7 +126,7 @@ pacstrap /mnt base base-devel \
   ```sh
   bash <(curl aur.sh) --asroot --noconfirm -si aura-bin 
   rm -rf aura-bin
-  aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
+  aura --noconfirm -Aya hostsblock solarized-dark-themes \
     dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
     virt-viewer insync bats-git
   ```
