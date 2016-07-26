@@ -128,7 +128,7 @@ pacstrap /mnt base base-devel \
   rm -rf aura-bin
   aura --noconfirm -Aya hostsblock solarized-dark-themes \
     dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
-    virt-viewer insync bats-git
+    virt-viewer insync bats-git cloudfoundry-cli
   ```
 * Copy configuration files:
   ```sh
