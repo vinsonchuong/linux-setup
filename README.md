@@ -92,7 +92,8 @@ pacman-key -r 962DDE58 && pacman-key --lsign-key 962DDE58
 pacman -Syy
 
 pacstrap /mnt base base-devel \
-  intel-ucode xf86-input-synaptics xf86-input-wacom xf86-video-intel libva-intel-driver libvdpau-va-gl alsa-utils \
+  intel-ucode xf86-input-synaptics xf86-input-wacom xf86-video-intel libva-intel-driver libvdpau-va-gl \
+  alsa-utils pulseaudio pulseaudio-alsa \
   haveged tlp acpi_call acpid ethtool iw lsb-release smartmontools wpa_supplicant dnsmasq nftables \
   xorg-server xorg-server-utils xorg-apps \
   infinality-bundle ibfonts-meta-extended \
