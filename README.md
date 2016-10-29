@@ -109,7 +109,8 @@ pacstrap /mnt base base-devel \
   zathura zathura-djvu zathura-pdf-mupdf zathura-ps \
   feh mpv beets python2-pylast python2-requests imagemagick \
   postgresql postgresql-old-upgrade nodejs npm \
-  libvirt virt-manager qemu dmidecode ebtables
+  libvirt virt-manager qemu dmidecode ebtables \
+  gconf
 ```
 * chroot into the system and set basic settings:
   ```sh
