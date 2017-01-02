@@ -110,7 +110,8 @@ pacstrap /mnt base base-devel \
   feh mpv beets python2-pylast python2-requests imagemagick \
   postgresql postgresql-old-upgrade nodejs npm \
   libvirt virt-manager qemu dmidecode ebtables \
-  gconf
+  gconf \
+  gphoto2 darktable
 ```
 * chroot into the system and set basic settings:
   ```sh
@@ -130,7 +131,7 @@ pacstrap /mnt base base-devel \
   rm -rf aura-bin
   aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
     dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
-    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt
+    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt nufraw
   ```
 * Copy configuration files:
   ```sh
