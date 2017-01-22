@@ -111,7 +111,8 @@ pacstrap /mnt base base-devel \
   postgresql postgresql-old-upgrade nodejs npm \
   libvirt virt-manager qemu dmidecode ebtables \
   gconf \
-  gphoto2 darktable
+  gphoto2 darktable \
+  python-pip
 ```
 * chroot into the system and set basic settings:
   ```sh
