@@ -1,5 +1,11 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+# set -o xtrace
+set -o pipefail
+
 cd '/tmp'
+
 if [ -d '/var/lib/postgres/data' ]
 then
 	mv /var/lib/postgres/{data,data-old}

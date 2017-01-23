@@ -1,4 +1,9 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+# set -o xtrace
+set -o pipefail
+
 INTERFACE="$1"
 
 tee "/etc/systemd/network/$INTERFACE.network" <<EOF
