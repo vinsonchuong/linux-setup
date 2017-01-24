@@ -6,19 +6,25 @@ set -o pipefail
 
 cd '/tmp'
 
-if [ -d '/var/lib/postgres/data' ]
+systemctl stop postgresql
+
+if [[ -d '/var/lib/postgres/data' ]]
 then
 	mv /var/lib/postgres/{data,data-old}
-	mkdir '/var/lib/postgres/data'
-	chown 'postgres:postgres' '/var/lib/postgres/data'
 	su postgres <<-EOF
+	mkdir -p '/var/lib/postgres/data'
 	initdb -D /var/lib/postgres/data
 	pg_upgrade -b /opt/pgsql-*/bin/ -B /usr/bin/ -d /var/lib/postgres/data-old -D /var/lib/postgres/data
-	./delete_old_cluster.sh
-	rm -f 'delete_old_cluster.sh' 'analyze_new_cluster.sh'
+	rm -rf data-old
 	EOF
+	systemctl start postgresql
 else
-	mkdir '/var/lib/postgres/data'
-	chown 'postgres:postgres' '/var/lib/postgres/data'
-	su postgres -c "initdb -D /var/lib/postgres/data && createuser -dw '$(id -un)'"
+	mkdir -p '/var/lib/postgres'
+	chown 'postgres:postgres' '/var/lib/postgres'
+	su postgres -c 'initdb -D /var/lib/postgres/data'
+	systemctl start postgresql
+	for user in $(lid -ng users)
+	do
+		su postgres -c "createuser -dw '${user}'"
+	done
 fi
