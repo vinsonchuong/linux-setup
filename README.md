@@ -174,8 +174,6 @@ pacstrap /mnt base base-devel \
   ```
 * Setup libvirt
   ```sh
-  groupadd libvirt
-
   virt-install --connect 'qemu:///system'
     -n 'windows' --ram 4096 --cpu 'host' --vcpus 2 --disk 'size=40' --graphics 'vnc' \
     --os-variant 'win2k12r2' --clock 'offset=localtime' \
