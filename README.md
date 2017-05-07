@@ -121,7 +121,8 @@ pacstrap /mnt base base-devel \
   rm -rf aura-bin
   aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
     dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
-    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt nufraw
+    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt nufraw \
+    fonts-meta-extended-lt
   ```
 * Copy configuration files:
   ```sh
@@ -133,6 +134,7 @@ pacstrap /mnt base base-devel \
   ```sh
   ln -s /etc/fonts/conf.avail/10-sub-pixel-rgb.conf /etc/fonts/conf.d
   ln -s /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
+  ln -s /etc/fonts/conf.avail/30-infinality-aliases.conf /etc/fonts/conf.d
   ```
 * Enable system services:
   ```sh
