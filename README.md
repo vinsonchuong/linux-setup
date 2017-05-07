@@ -108,6 +108,7 @@ pacstrap /mnt base base-devel \
   arch-chroot /mnt /bin/bash
 
   systemd-firstboot --locale=en_US.UTF-8 --timezone=America/Los_Angeles --hostname=laptop
+  sed -i '/^#en_US\.UTF-8 UTF-8/s/#//' /etc/locale.gen
   locale-gen
   hwclock --systohc --utc
   sed -i '/127\.0\.0\.1/s/$/ laptop/' /etc/hosts
