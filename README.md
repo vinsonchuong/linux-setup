@@ -139,7 +139,7 @@ pacstrap /mnt base base-devel \
 * Enable system services:
   ```sh
   systemctl enable systemd-networkd systemd-networkd-wait-online \
-    systemd-resolved systemd-timesyncd nftables haveged tlp tlp-sleep \
+    systemd-timesyncd nftables haveged tlp tlp-sleep \
     lightdm hostsblock.timer postgresql libvirtd
   ```
 * Setup PostgreSQL:
