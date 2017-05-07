@@ -80,25 +80,14 @@
 ## Installing the Base System
 * Install needed packages:
 ```sh
-tee -a /etc/pacman.conf <<'EOF'
-
-[infinality-bundle]
-Server = http://bohoomil.com/repo/$arch
-
-[infinality-bundle-fonts]
-Server = http://bohoomil.com/repo/fonts
-EOF
-pacman-key -r 962DDE58 && pacman-key --lsign-key 962DDE58
-pacman -Syy
-
 pacstrap /mnt base base-devel \
   intel-ucode xf86-input-libinput xf86-input-wacom xf86-video-intel libva-intel-driver libvdpau-va-gl \
   alsa-utils pulseaudio pulseaudio-alsa \
   haveged tlp acpi_call acpid ethtool iw lsb-release smartmontools wpa_supplicant dnsmasq nftables \
   xorg-server xorg-server-utils xorg-apps \
-  infinality-bundle ibfonts-meta-extended \
   lightdm lightdm-gtk3-greeter accountsservice \
   i3 gnome-icon-theme \
+  ttf-dejavu \
   gstreamer gst-libav gst-plugins-base gst-plugins-good gst-vaapi \
   atool zip unzip p7zip unrar \
   mediainfo \
@@ -139,9 +128,11 @@ pacstrap /mnt base base-devel \
   cd ~
   hub clone vinsonchuong/etcfiles
   cp -rf etcfiles/* /etc
-
-  pacman-key -r 962DDE58 && pacman-key --lsign-key 962DDE58
-  pacman -Syy
+  ```
+* Configure Fonts:
+  ```sh
+  ln -s /etc/fonts/conf.avail/10-sub-pixel-rgb.conf /etc/fonts/conf.d
+  ln -s /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
   ```
 * Enable system services:
   ```sh
