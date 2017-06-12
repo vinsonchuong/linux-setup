@@ -97,7 +97,7 @@ pacstrap /mnt base base-devel \
   zsh zsh-completions git hub openssh rxvt-unicode tmux vim neovim python-neovim python2-neovim xclip firefox chromium flashplugin gimp pass di colordiff the_silver_searcher \
   zathura zathura-djvu zathura-pdf-mupdf zathura-ps \
   feh mpv beets python2-pylast python2-requests imagemagick \
-  postgresql postgresql-old-upgrade nodejs npm \
+  postgresql postgresql-old-upgrade nodejs npm yarn \
   libvirt virt-manager qemu dmidecode ebtables \
   gconf \
   gphoto2 darktable \
