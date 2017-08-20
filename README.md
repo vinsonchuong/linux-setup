@@ -122,7 +122,7 @@ pacstrap /mnt base base-devel \
   rm -rf aura-bin
   aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
     dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
-    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt nufraw \
+    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt \
     fonts-meta-extended-lt
   ```
 * Copy configuration files:
