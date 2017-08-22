@@ -137,6 +137,29 @@ pacstrap /mnt base base-devel \
   ln -s /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
   ln -s /etc/fonts/conf.avail/30-infinality-aliases.conf /etc/fonts/conf.d
   ```
+* Configure hostsblock:
+  ```sh
+  sudo gpasswd -a dnsmasq hostsblock
+  echo 'hostsblock ALL=(root) NOPASSWD:/usr/bin/systemctl reload dnsmasq.service' > /etc/sudoers
+  cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
+postprocess() {
+  sudo /usr/bin/systemctl reload dnsmasq.service
+}
+
+blocklists=(
+  'http://support.it-mate.co.uk/downloads/HOSTS.txt'
+  'http://winhelp2002.mvps.org/hosts.zip'
+  'http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&mimetype=plaintext'
+  'http://hosts-file.net/download/hosts.zip'
+  'http://www.malwaredomainlist.com/hostslist/hosts.txt'
+  'http://hosts-file.net/ad_servers.txt'
+  'http://hosts-file.net/hphosts-partial.asp'
+  'http://hostsfile.org/Downloads/BadHosts.unx.zip'
+  'http://hostsfile.mine.nu/Hosts.zip'
+  'http://sysctl.org/cameleon/hosts'
+)
+  EOF
+  ```
 * Enable system services:
   ```sh
   systemctl enable systemd-networkd systemd-networkd-wait-online \
