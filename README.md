@@ -101,7 +101,8 @@ pacstrap /mnt base base-devel \
   libvirt virt-manager qemu dmidecode ebtables \
   gconf \
   gphoto2 darktable libraw libopenraw poppler-glib \
-  python-pip
+  python-pip \
+  certbot
 ```
 * chroot into the system and set basic settings:
   ```sh
@@ -121,7 +122,7 @@ pacstrap /mnt base base-devel \
   bash <(curl aur.sh) --asroot --noconfirm -si aura-bin 
   rm -rf aura-bin
   aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
-    dmenu-xft-height google-musicmanager xidel jq tmux-solarized-git flavoured \
+    dmenu-xft-height qtwebkit-bin google-musicmanager xidel jq tmux-solarized-git flavoured \
     virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt \
     fonts-meta-extended-lt
   ```
