@@ -82,6 +82,7 @@
 ```sh
 pacstrap /mnt base base-devel \
   efibootmgr intel-ucode xf86-input-libinput xf86-input-wacom xf86-video-intel libva-intel-driver libvdpau-va-gl \
+  dosfstools \
   alsa-utils pulseaudio pulseaudio-alsa \
   haveged tlp acpi_call acpid ethtool iw lsb-release smartmontools wpa_supplicant dnsmasq nftables \
   xorg-server xorg-server-utils xorg-apps \
@@ -140,7 +141,9 @@ pacstrap /mnt base base-devel \
   ```
 * Configure hostsblock:
   ```sh
-  sudo gpasswd -a dnsmasq hostsblock
+  gpasswd -a dnsmasq hostsblock
+  chmod +x /var/lib/hostsblock
+  chmod -R +r /var/lib/hostsblock
   echo 'hostsblock ALL=(root) NOPASSWD:/usr/bin/systemctl reload dnsmasq.service' > /etc/sudoers
   cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
 postprocess() {
