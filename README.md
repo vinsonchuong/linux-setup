@@ -183,6 +183,7 @@ blocklists=(
 
   [Network]
   DHCP=yes
+  IPForward=kernel
   EOF
 
   WIFI_INTERFACE=$(find /sys/class/net -name 'wl*' -printf '%f\n' | head -1)
