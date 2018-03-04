@@ -209,6 +209,18 @@ blocklists=(
     --cdrom '/home/vinsonchuong/downloads/en_windows_server_2012_r2_with_update_x64_dvd_4065220.iso'
   virsh -c 'qemu:///system' start 'windows' && virt-viewer -c 'qemu:///system' 'windows'
   ```
+* Setup Docker
+  ```sh
+  sudo ln -s /bin/iptables-compat /usr/local/bin/iptables
+  mkdir /etc/systemd/system/docker.service.d/noiptables.conf
+  cat << EOF > /etc/systemd/system/docker.service.d/noiptables.conf
+  [Service]
+  ExecStart=
+  ExecStart=/usr/bin/dockerd -H fd:// --iptables=false --fixed-cidr=172.17.0.0/16
+  EOF
+  systemctl daemon-reload
+  systemctl enable docker
+  ```
 * Setup user account
   ```sh
   bin/mksudoer vinsonchuong
