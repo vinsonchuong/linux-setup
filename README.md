@@ -125,7 +125,8 @@ pacstrap /mnt base base-devel \
   aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
     dmenu-xft-height qtwebkit-bin google-musicmanager xidel jq tmux-solarized-git flavoured \
     virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt \
-    fonts-meta-extended-lt
+    fonts-meta-extended-lt \
+    stepmania-git antimicro
   ```
 * Copy configuration files:
   ```sh
