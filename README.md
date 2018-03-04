@@ -142,7 +142,7 @@ pacstrap /mnt base base-devel \
 * Configure hostsblock:
   ```sh
   gpasswd -a dnsmasq hostsblock
-  chmod +x /var/lib/hostsblock
+  chmod +rx /var/lib/hostsblock
   chmod -R +r /var/lib/hostsblock
   echo 'hostsblock ALL=(root) NOPASSWD:/usr/bin/systemctl reload dnsmasq.service' > /etc/sudoers
   cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
