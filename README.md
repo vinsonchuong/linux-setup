@@ -103,6 +103,7 @@ pacstrap /mnt base base-devel \
   gconf \
   gphoto2 darktable libraw libopenraw poppler-glib \
   python-pip \
+  ruby ruby-rdoc \
   certbot
 ```
 * chroot into the system and set basic settings:
