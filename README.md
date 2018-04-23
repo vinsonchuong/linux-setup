@@ -4,6 +4,7 @@
 * Disable any unused features and enable any useful features
   * Boot with UEFI only and without CSM support
   * Disable secure boot
+* Enable Thunderbolt BIOS Assist Mode
 * Ensure that USB drives are part of the boot order
 
 ## Writing Installation Media
@@ -13,99 +14,130 @@
   ```
 
 ## Booting Installation Media
-* Ensure internet connectivity is available via ethernet and DHCP. The installer will connect automatically.
 * Boot from the USB installation media
 
+## Networking
+* If Ethernet is connected, the installer will connect automatically.
+* If only WiFi is available, connect as follows:
+  ```sh
+  WIFI_INTERFACE=$(find /sys/class/net -name 'wl*' -printf '%f\n')
+  iw link set $WIFI_INTERFACE up
+  wpa_supplicant -B -i $WIFI_INTERFACE -c <(wpa_passphrase SSID PASSPHRASE)
+  ```
+
+## Updating System Clock
+* Run
+  ```sh
+  timedatectl set-ntp true
+  ```
+
 ## Disk Partitioning
-* The following partition scheme will be produced, assuming an SSD with a capacity of at least 256GB:
-  Label | Mount | Type | Size    
+* The following partition scheme will be produced, assuming an SSD with a capacity of at least 1TB:
+  Label | Mount | Type | Size
   ----- | ----- | ---- | --------
   boot  | /boot | vfat | 512MiB
   root  | /     | ext4 | 16GiB
-  var   | /var  | ext4 | 128GiB
-  home  | /home | ext4 | > 90GiB
-* Wipe the installed SSD (assumed to be named `/dev/sda`) via
+  var   | /var  | ext4 | 512GiB
+  home  | /home | ext4 | ~ 400GiB
+* Determine the device name for the main SSD by running
   ```sh
-  sgdisk --zap-all /dev/sda
+  lsblk
+  ```
+* Wipe the installed SSD (assumed to be named `/dev/nvme0n1`) via
+  ```sh
+  sgdisk --zap-all /dev/nvme0n1
   ```
 * Generate the partition table as follows (`_` denotes carriage return)
   ```sh
-  gdisk /dev/sda
+  gdisk /dev/nvme0n1
   n _ _ +512M ef00
   n _ _ +16G _
-  n _ _ +128G _
+  n _ _ +512G _
   n _ _ _ _
   w
   ```
 * Format the new partitions:
   ```sh
-  mkfs.vfat /dev/sda1
-  mkfs.ext4 /dev/sda2
-  mkfs.ext4 /dev/sda3
-  mkfs.ext4 /dev/sda4
+  mkfs.vfat /dev/nvme0n1p1
+  mkfs.ext4 /dev/nvme0n1p2
+  mkfs.ext4 /dev/nvme0n1p3
+  mkfs.ext4 /dev/nvme0n1p4
   ```
 * Label the partitions:
   ```sh
-  echo 'mtools_skip_check=1' > ~/.mtoolsrc && mlabel -i /dev/sda1 boot
-  e2label /dev/sda2 root
-  e2label /dev/sda3 var
-  e2label /dev/sda4 home
+  echo 'mtools_skip_check=1' > ~/.mtoolsrc && mlabel -i /dev/nvme0n1p1 ::boot
+  e2label /dev/nvme0n1p2 root
+  e2label /dev/nvme0n1p3 var
+  e2label /dev/nvme0n1p4 home
   ```
 * Make `/boot` bootable via UEFI:
   ```sh
-  efibootmgr -d /dev/sda -p 1 -c -L 'Arch Linux' -l '/vmlinuz-linux' -u 'root=/dev/sda2 rw initrd=/intel-ucode.img initrd=/initramfs-linux.img'
-  INSTALLER=$(efibootmgr | awk '/BootCurrent/ {print $2}')
-  OS=$(efibootmgr | awk '/Arch Linux/ {print $1}' | sed 's/^Boot\([^*]*\).*$/\1/')
-  efibootmgr -O
-  efibootmgr -o $INSTALLER,$OS
+  efibootmgr -d /dev/nvme0n1 -p 1 -c -L 'Arch Linux' -l '/vmlinuz-linux' -u 'root=/dev/nvme0n1p2 rw initrd=/intel-ucode.img initrd=/initramfs-linux.img'
   ```
 * Set reserved blocks to 0 on ext4 partitions:
   ```sh
-  tune2fs -m 0.0 /dev/sda2
-  tune2fs -m 0.0 /dev/sda3
-  tune2fs -m 0.0 /dev/sda4
+  tune2fs -m 0.0 /dev/nvme0n1p2
+  tune2fs -m 0.0 /dev/nvme0n1p3
+  tune2fs -m 0.0 /dev/nvme0n1p4
   ```
 * Mount the partitions
   ```sh
-  mount -o defaults,noatime,discard /dev/sda2 /mnt
-  mkdir /mnt/boot && mount -o defaults,noatime,discard /dev/sda1 /mnt/boot
-  mkdir /mnt/var && mount -o defaults,noatime,discard /dev/sda3 /mnt/var
-  mkdir /mnt/home && mount -o defaults,noatime,discard /dev/sda4 /mnt/home
-  ```
-* Generate the `fstab` via
-  ```sh
-  genfstab -L -p /mnt | sed 's/rw[^\t]*/defaults,noatime,discard/' >> /mnt/etc/fstab
+  mount -o defaults,noatime,discard /dev/nvme0n1p2 /mnt
+  mkdir /mnt/boot && mount -o defaults,noatime,discard /dev/nvme0n1p1 /mnt/boot
+  mkdir /mnt/var && mount -o defaults,noatime,discard /dev/nvme0n1p3 /mnt/var
+  mkdir /mnt/home && mount -o defaults,noatime,discard /dev/nvme0n1p4 /mnt/home
   ```
 
 ## Installing the Base System
 * Install needed packages:
 ```sh
+echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 pacstrap /mnt base base-devel \
-  efibootmgr intel-ucode xf86-input-libinput xf86-input-wacom xf86-video-intel libva-intel-driver libvdpau-va-gl \
-  dosfstools \
+  efibootmgr intel-ucode \
+  dosfstools haveged openssh \
+  tlp acpi_call iw ethtool lsb-release smartmontools x86_energy_perf_policy \
+  iw wpa_supplicant dnsmasq nftables \
+  xf86-input-libinput xf86-input-wacom \
+  xf86-video-intel libva-intel-driver libvdpau-va-gl \
+  xorg-server xorg-apps \
   alsa-utils pulseaudio pulseaudio-alsa \
-  haveged tlp acpi_call acpid ethtool iw lsb-release smartmontools wpa_supplicant dnsmasq nftables \
-  xorg-server xorg-server-utils xorg-apps \
-  lightdm lightdm-gtk3-greeter accountsservice \
-  i3 gnome-icon-theme \
-  ttf-dejavu \
-  gstreamer gst-libav gst-plugins-base gst-plugins-good gst-vaapi \
-  atool zip unzip p7zip unrar \
+  gstreamer gst-libav gst-plugins-base gst-plugins-good gstreamer-vaapi \
+  lightdm lightdm-gtk-greeter accountsservice \
+  di colordiff \
+  the_silver_searcher \
+  atool bzip2 cpio gzip lha xz lzop p7zip tar unace unrar zip unzip \
+  zsh zsh-completions \
+  neovim python-neovim xclip \
+  zathura zathura-djvu zathura-pdf-mupdf zathura-ps zathura-cb \
+  feh \
+  mpv \
+  beets python-beautifulsoup4 python-pylast python-requests imagemagick python-xdg \
   mediainfo \
-  transmission-cli \
-  jre7-openjdk cmake ctags \
-  namcap pkgbuild-introspection burp \
-  zsh zsh-completions git hub openssh rxvt-unicode tmux vim neovim python-neovim python2-neovim xclip firefox chromium flashplugin gimp pass di colordiff the_silver_searcher \
-  zathura zathura-djvu zathura-pdf-mupdf zathura-ps \
-  feh mpv beets python2-pylast python2-requests imagemagick \
-  postgresql postgresql-old-upgrade nodejs npm yarn \
-  libvirt virt-manager qemu dmidecode ebtables \
-  gconf \
-  gphoto2 darktable libraw libopenraw poppler-glib \
-  python-pip \
-  ruby ruby-rdoc \
-  certbot
+  gphoto2 \
+  darktable \
+  i3 dmenu gnome-icon-theme ttf-dejavu \
+  rxvt-unicode \
+  tmux \
+  firefox \
+  chromium \
+  flashplugin \
+  gimp \
+  pass \
+  virt-manager libvirt ebtables dnsmasq bridge-utils gnu-netcat qemu dmidecode \
+  cmake ctags gconf \
+  python python-pip \
+  ruby ruby-bundler ruby-rdoc \
+  nodejs npm yarn \
+  jdk10-openjdk \
+  git hub \
+  certbot \
+  postgresql postgresql-old-upgrade \
+  jq
 ```
+* Generate the `fstab` via
+  ```sh
+  genfstab -L -p /mnt | sed 's/rw[^\t]*/defaults,noatime,discard/' >> /mnt/etc/fstab
+  ```
 * chroot into the system and set basic settings:
   ```sh
   arch-chroot /mnt /bin/bash
@@ -114,26 +146,40 @@ pacstrap /mnt base base-devel \
   sed -i '/^#en_US\.UTF-8 UTF-8/s/#//' /etc/locale.gen
   locale-gen
   hwclock --systohc --utc
-  sed -i '/127\.0\.0\.1/s/$/ laptop/' /etc/hosts
+  echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
-  export LANG=en_US.UTF-8
-  hostname laptop
+  systemctl enable systemd-timesyncd haveged tlp tlp-sleep
+
+  git clone https://github.com/vinsonchuong/laptop /root/laptop
+  ```
+* Setup user account
+  ```sh
+  /root/laptop/bin/mksudoer vinsonchuong
   ```
 * Install AUR packages:
   ```sh
-  bash <(curl aur.sh) --asroot --noconfirm -si aura-bin 
+  su - vinsonchuong
+  bash <(curl aur.sh) -si --noconfirm aura-bin
   rm -rf aura-bin
-  aura --noconfirm -Aya hostsblock gtk-theme-numix-solarized \
-    dmenu-xft-height qtwebkit-bin google-musicmanager xidel jq tmux-solarized-git flavoured \
-    virt-viewer insync bats-git cloudfoundry-cli heroku-toolbelt \
+  sudo aura --noconfirm -Aya \
     fonts-meta-extended-lt \
+    google-musicmanager qtwebkit-bin \
+    insync \
+    hostsblock \
+    gtk-theme-numix-solarized tmux-solarized16 flavoured \
+    gitaur bats-git cloudfoundry-cli heroku-toolbelt \
     stepmania-git antimicro
+  sudo aura -Oj
+  sudo paccache -r
+  sudo paccache -ruk0
+  exit
   ```
-* Copy configuration files:
+* Setup login manager:
   ```sh
-  cd ~
-  hub clone vinsonchuong/etcfiles
-  cp -rf etcfiles/* /etc
+  sed 's/#autologin-user=/autologin-user=vinsonchuong/' -i /etc/lightdm/lightdm.conf
+  groupadd -r autologin
+  gpasswd -a vinsonchuong autologin
+  systemctl enable lightdm
   ```
 * Configure Fonts:
   ```sh
@@ -141,12 +187,19 @@ pacstrap /mnt base base-devel \
   ln -s /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
   ln -s /etc/fonts/conf.avail/30-infinality-aliases.conf /etc/fonts/conf.d
   ```
-* Configure hostsblock:
+* Setup monitor DPI:
   ```sh
-  gpasswd -a dnsmasq hostsblock
-  chmod +rx /var/lib/hostsblock
-  chmod -R +r /var/lib/hostsblock
+  cat <<EOF >> /etc/X11/xorg.conf.d/10-monitor.conf
+  Section "Monitor"
+    Identifier "eDP1"
+    DisplaySize 310 174
+  EndSection
+  EOF
+  ```
+* Configure Host Blacklist:
+  ```sh
   echo 'hostsblock ALL=(root) NOPASSWD:/usr/bin/systemctl reload dnsmasq.service' > /etc/sudoers
+
   cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
 postprocess() {
   sudo /usr/bin/systemctl reload dnsmasq.service
@@ -165,31 +218,33 @@ blocklists=(
   'http://sysctl.org/cameleon/hosts'
 )
   EOF
-  ```
-* Enable system services:
-  ```sh
-  systemctl enable systemd-networkd systemd-networkd-wait-online \
-    systemd-timesyncd nftables haveged tlp tlp-sleep \
-    lightdm hostsblock.timer postgresql libvirtd
-  ```
-* Setup PostgreSQL:
-  ```sh
-  bin/setup_postgres
+
+  cat <<EOF >> /etc/dnsmasq.conf
+conf-file=/usr/share/dnsmasq/trust-anchors.conf
+dnssec
+dnssec-check-unsigned
+server=1.1.1.1
+server=1.0.0.1
+addn-hosts=/var/lib/hostsblock/hosts.block
+  EOF
+
+  systemctl enable dnsmasq hostsblock.timer
   ```
 * Setup Networking
   ```sh
-  ETHERNET_INTERFACE=$(find /sys/class/net -name 'en*' -printf '%f\n' | head -1)
-  tee "/etc/systemd/network/$INTERFACE.network" <<EOF
+  WIFI_INTERFACE=$(find /sys/class/net -name 'wl*' -printf '%f\n' | head -1)
+
+  systemctl enable systemd-networkd systemd-networkd-wait-online nftables "wpa_supplicant@$WIFI_INTERFACE"
+
+  cat <<EOF >> /etc/systemd/network/wifi.network
   [Match]
-  Name=$INTERFACE
+  Name=wl*
 
   [Network]
-  DHCP=yes
-  IPForward=kernel
+  DHCP=ipv4
+  IPForward=1
   EOF
 
-  WIFI_INTERFACE=$(find /sys/class/net -name 'wl*' -printf '%f\n' | head -1)
-  bin/setup_wifi "$WIFI_INTERFACE"
   cat <<EOF >> "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"
   network={
     ssid="home"
@@ -203,8 +258,28 @@ blocklists=(
   EOF
   wpa_passphrase 'Pivotal Guest' 'makeithappen' >> "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"
   ```
+* Setup PostgreSQL:
+  ```sh
+  systemctl enable postgresql
+
+	su postgres -c 'initdb -D /var/lib/postgres/data'
+
+  mkdir /run/postgresql
+  chown postgres:postgres /run/postgresql
+  su postgres -c 'pg_ctl -s -D /var/lib/postgres/data start -w -t 120'
+
+	for user in $(groupmems -g users -l)
+	do
+		su postgres -c "createuser -dw '${user}'"
+	done
+
+  su postgres -c 'pg_ctl -s -D /var/lib/postgres/data stop -m fast'
+  rm -rf /run/postgresql
+  ```
 * Setup libvirt
   ```sh
+  systemctl enable libvirtd
+
   virt-install --connect 'qemu:///system'
     -n 'windows' --ram 4096 --cpu 'host' --vcpus 2 --disk 'size=40' --graphics 'vnc' \
     --os-variant 'win2k12r2' --clock 'offset=localtime' \
@@ -213,7 +288,7 @@ blocklists=(
   ```
 * Setup Docker
   ```sh
-  sudo ln -s /bin/iptables-compat /usr/local/bin/iptables
+  ln -s /bin/iptables-compat /usr/local/bin/iptables
   mkdir /etc/systemd/system/docker.service.d/noiptables.conf
   cat << EOF > /etc/systemd/system/docker.service.d/noiptables.conf
   [Service]
@@ -223,12 +298,9 @@ blocklists=(
   systemctl daemon-reload
   systemctl enable docker
   ```
-* Setup user account
-  ```sh
-  bin/mksudoer vinsonchuong
-  ```
 * Shutdown
   ```sh
+  rm -rf /root/laptop/{*,.*}
   exit
   systemctl poweroff
   ```
@@ -240,55 +312,3 @@ ssh-keygen -t ecdsa -b 521 -C "$(whoami)@$(hostname)-$(date -I)" && ssh-add
 gpg --gen-key
 pass init 'vinsonchuong@gmail.com'
 ```
-
-## Notes
-* User-Level Setup
-  * Firefox Configuration
-    * https://wiki.archlinux.org/index.php/Firefox_tweaks
-* `chmod 0600` files containing wireless passwords?
-* Add i3 shortcuts for `dm-tool` commands
-
-## Pages to Read
-* Check on Wacom tablet drivers
-* https://wiki.archlinux.org/index.php/Improve_pacman_performance
-* https://wiki.archlinux.org/index.php/Mirrors#Sorting_mirrors
-* https://wiki.archlinux.org/index.php/Improve_boot_performance#Readahead
-* https://wiki.archlinux.org/index.php/Systemd-nspawn
-* https://wiki.archlinux.org/index.php/Systemd-networkd
-* Add wifi hotspots without root
-* https://wiki.archlinux.org/index.php/Power_saving#Kernel_parameters
-* https://wiki.archlinux.org/index.php/Systemd/cron_functionality
-* http://www.thinkwiki.org/wiki/How_to_reduce_power_consumption
-* https://wiki.ubuntu.com/Kernel/PowerManagement/PowerSavingTweaks
-* https://wiki.archlinux.org/index.php/List_of_applications
-* https://wiki.archlinux.org/index.php/Category:X_Server
-* https://wiki.archlinux.org/index.php/Polkit#Authentication_agents
-* https://wiki.archlinux.org/index.php/Desktop_notifications
-* https://wiki.archlinux.org/index.php/Display_Power_Management_Signaling
-* https://wiki.archlinux.org/index.php/General_recommendations
-* http://vincent.jousse.org/tech/archlinux-retina-hidpi-macbookpro-xmonad/
-* https://www.archlinux.org/news/reorganization-of-vim-packages/
-* https://wiki.archlinux.org/index.php/LightDM#Enabling_autologin
-* https://wiki.archlinux.org/index.php/File_systems#Create_a_filesystem - Mounting ISOs without root permissions
-* https://wiki.archlinux.org/index.php/Category:System_administration
-* https://wiki.archlinux.org/index.php/System_maintenance
-* https://wiki.archlinux.org/index.php/Desktop_environment - Custom environments
-* https://wiki.archlinux.org/index.php/Systemd/User#Xorg_as_a_systemd_user_service
-* https://wiki.archlinux.org/index.php/Infinality-bundle%2Bfonts
-* LightDM dm-tool for switching sessions: https://wiki.archlinux.org/index.php/LightDM
-* https://wiki.archlinux.org/index.php/Fprint
-* https://wiki.archlinux.org/index.php/Webcam_Setup
-* http://support.lenovo.com/us/en/products/laptops-and-netbooks/thinkpad-x-series-laptops/thinkpad-x1-carbon-type-20a7-20a8/downloads/DS039783
-* https://wiki.archlinux.org/index.php/Microcode#Enabling_Intel_Microcode_Updates
-* https://wiki.archlinux.org/index.php/Nftables
-* https://wiki.archlinux.org/index.php/Core_utilities
-* https://wiki.archlinux.org/index.php/Man_page#Colored_man_pages
-* https://wiki.archlinux.org/index.php/Zsh#Prompts
-* https://wiki.archlinux.org/index.php/Tmux
-* https://wiki.archlinux.org/index.php/Bash#Tips_and_tricks
-* http://grml.org/zsh/
-* https://wiki.archlinux.org/index.php/Maximizing_performance
-* https://wiki.archlinux.org/index.php/CUPS
-* https://launchpad.net/~thefanclub/+archive/ubuntu/grive-tools
-
-http://jbt.github.io/markdown-editor/#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

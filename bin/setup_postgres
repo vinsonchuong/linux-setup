@@ -19,11 +19,9 @@ then
 	EOF
 	systemctl start postgresql
 else
-	mkdir -p '/var/lib/postgres'
-	chown 'postgres:postgres' '/var/lib/postgres'
 	su postgres -c 'initdb -D /var/lib/postgres/data'
 	systemctl start postgresql
-	for user in $(lid -ng users)
+	for user in $(groupmems -g users -l)
 	do
 		su postgres -c "createuser -dw '${user}'"
 	done
