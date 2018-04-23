@@ -115,7 +115,7 @@ pacstrap /mnt base base-devel \
   mediainfo \
   gphoto2 \
   darktable \
-  i3 dmenu gnome-icon-theme ttf-dejavu \
+  i3 gnome-icon-theme ttf-dejavu \
   rxvt-unicode \
   tmux \
   firefox \
@@ -167,6 +167,7 @@ pacstrap /mnt base base-devel \
     insync \
     hostsblock \
     gtk-theme-numix-solarized tmux-solarized16 flavoured \
+    dmenu-height \
     gitaur bats-git cloudfoundry-cli heroku-toolbelt \
     stepmania-git antimicro
   sudo aura -Oj
