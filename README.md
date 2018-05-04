@@ -197,45 +197,11 @@ pacstrap /mnt base base-devel \
   EndSection
   EOF
   ```
-* Configure Host Blacklist:
-  ```sh
-  echo 'hostsblock ALL=(root) NOPASSWD:/usr/bin/systemctl reload dnsmasq.service' > /etc/sudoers
-
-  cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
-postprocess() {
-  sudo /usr/bin/systemctl reload dnsmasq.service
-}
-
-blocklists=(
-  'http://support.it-mate.co.uk/downloads/HOSTS.txt'
-  'http://winhelp2002.mvps.org/hosts.zip'
-  'http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&mimetype=plaintext'
-  'http://hosts-file.net/download/hosts.zip'
-  'http://www.malwaredomainlist.com/hostslist/hosts.txt'
-  'http://hosts-file.net/ad_servers.txt'
-  'http://hosts-file.net/hphosts-partial.asp'
-  'http://hostsfile.org/Downloads/BadHosts.unx.zip'
-  'http://hostsfile.mine.nu/Hosts.zip'
-  'http://sysctl.org/cameleon/hosts'
-)
-  EOF
-
-  cat <<EOF >> /etc/dnsmasq.conf
-conf-file=/usr/share/dnsmasq/trust-anchors.conf
-dnssec
-dnssec-check-unsigned
-server=1.1.1.1
-server=1.0.0.1
-addn-hosts=/var/lib/hostsblock/hosts.block
-  EOF
-
-  systemctl enable dnsmasq hostsblock.timer
-  ```
 * Setup Networking
   ```sh
   WIFI_INTERFACE=$(find /sys/class/net -name 'wl*' -printf '%f\n' | head -1)
 
-  systemctl enable systemd-networkd systemd-networkd-wait-online nftables "wpa_supplicant@$WIFI_INTERFACE"
+  systemctl enable systemd-networkd systemd-networkd-wait-online nftables "wpa_supplicant@$WIFI_INTERFACE" dnsmasq
 
   cat <<EOF >> /etc/systemd/network/wifi.network
   [Match]
@@ -258,6 +224,37 @@ addn-hosts=/var/lib/hostsblock/hosts.block
   }
   EOF
   wpa_passphrase 'Pivotal Guest' 'makeithappen' >> "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"
+
+  cat <<EOF >> /etc/dnsmasq.conf
+conf-file=/usr/share/dnsmasq/trust-anchors.conf
+dnssec
+dnssec-check-unsigned
+server=1.1.1.1
+server=1.0.0.1
+  EOF
+  ```
+* Configure Host Blacklist:
+  ```sh
+  cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
+blocklists=(
+  'http://support.it-mate.co.uk/downloads/HOSTS.txt'
+  'http://winhelp2002.mvps.org/hosts.zip'
+  'http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&mimetype=plaintext'
+  'http://hosts-file.net/download/hosts.zip'
+  'http://www.malwaredomainlist.com/hostslist/hosts.txt'
+  'http://hosts-file.net/ad_servers.txt'
+  'http://hosts-file.net/hphosts-partial.asp'
+  'http://hostsfile.org/Downloads/BadHosts.unx.zip'
+  'http://hostsfile.mine.nu/Hosts.zip'
+  'http://sysctl.org/cameleon/hosts'
+)
+  EOF
+
+  mkdir /etc/hosts.d
+  ln -s /var/lib/hostsblock/hosts.block /etc/hosts.d
+  echo 'hostsdir=/etc/hosts.d' >> /etc/dnsmasq.conf
+
+  systemctl enable hostsblock.timer
   ```
 * Setup PostgreSQL:
   ```sh
