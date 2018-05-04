@@ -188,13 +188,38 @@ pacstrap /mnt base base-devel \
   ln -s /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
   ln -s /etc/fonts/conf.avail/30-infinality-aliases.conf /etc/fonts/conf.d
   ```
-* Setup monitor DPI:
+* Set monitor DPI:
   ```sh
   cat <<EOF >> /etc/X11/xorg.conf.d/10-monitor.conf
   Section "Monitor"
     Identifier "eDP1"
     DisplaySize 310 174
   EndSection
+  EOF
+  ```
+* Set keyboard and trackpad settings:
+  ```sh
+  cat <<EOF >> /etc/X11/xorg.conf.d/10-keyboard.conf
+Section "InputClass"
+	Identifier "AT Translated Set 2 keyboard"
+	MatchProduct "AT Translated Set 2 keyboard"
+	Option "XkbOptions" "caps:super,altwin:prtsc_rwin,ctrl:swap_lalt_lctl"
+EndSection
+
+Section "InputClass"
+	Identifier "Topre Corporation HHKB Professional"
+	MatchProduct "Topre Corporation HHKB Professional"
+	Option "XkbOptions" "ctrl:swap_lwin_lctl"
+EndSection
+  EOF
+
+  cat <<EOF >> /etc/X11/xorg.conf.d/10-trackpad.conf
+Section "InputClass"
+	Identifier "Trackpad"
+	MatchIsTouchpad "on"
+	Driver "libinput"
+	Option "Tapping" "on"
+EndSection
   EOF
   ```
 * Setup Networking
