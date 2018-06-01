@@ -310,15 +310,50 @@ blocklists=(
   ```
 * Setup Docker
   ```sh
-  ln -s /bin/iptables-compat /usr/local/bin/iptables
-  mkdir /etc/systemd/system/docker.service.d/noiptables.conf
-  cat << EOF > /etc/systemd/system/docker.service.d/noiptables.conf
+  cat <<EOF >> /etc/nftables.conf
+  table inet filter {
+    chain input {
+      type filter hook input priority 0;
+      ct state {established, related} accept
+      ct state invalid drop
+      iifname lo accept
+      ip protocol icmp accept
+      ip6 nexthdr icmpv6 accept
+      tcp dport ssh accept
+      reject with icmpx type port-unreachable
+    }
+
+    chain forward {
+      type filter hook forward priority 0;
+    }
+
+    chain output {
+      type filter hook output priority 0;
+    }
+  }
+
+  table ip nat {
+    chain prerouting {
+      type nat hook prerouting priority 0;
+    }
+
+    chain postrouting {
+      type nat hook postrouting priority 0;
+      oifname "wlp2s0" masquerade
+    }
+  }
+  EOF
+
+  mkdir /etc/systemd/system/docker.service.d
+  cat <<EOF > /etc/systemd/system/docker.service.d/noiptables.conf
   [Service]
   ExecStart=
-  ExecStart=/usr/bin/dockerd -H fd:// --iptables=false --fixed-cidr=172.17.0.0/16
+  ExecStart=/usr/bin/dockerd -H fd:// --iptables=false
   EOF
+
   systemctl daemon-reload
   systemctl enable docker
+  usermod -a -G docker vinsonchuong
   ```
 * Shutdown
   ```sh
