@@ -125,6 +125,7 @@ pacstrap /mnt base base-devel \
   gimp \
   pass \
   virt-manager libvirt ebtables dnsmasq bridge-utils gnu-netcat qemu dmidecode \
+  docker \
   cmake ctags gconf \
   python python-pip \
   ruby ruby-bundler ruby-rdoc \
