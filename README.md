@@ -93,6 +93,7 @@
 ```sh
 echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 pacstrap /mnt base base-devel \
+  pacman-contrib \
   efibootmgr intel-ucode \
   dosfstools haveged openssh \
   tlp acpi_call iw ethtool lsb-release smartmontools x86_energy_perf_policy \
