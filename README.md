@@ -252,9 +252,6 @@ EndSection
   wpa_passphrase 'Pivotal Guest' 'makeithappen' >> "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"
 
   cat <<EOF >> /etc/dnsmasq.conf
-conf-file=/usr/share/dnsmasq/trust-anchors.conf
-dnssec
-dnssec-check-unsigned
 server=1.1.1.1
 server=1.0.0.1
   EOF
