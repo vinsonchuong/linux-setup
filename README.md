@@ -119,7 +119,7 @@ pacstrap /mnt base base-devel \
   i3 gnome-icon-theme ttf-dejavu \
   rxvt-unicode \
   tmux \
-  firefox \
+  firefox firefox-developer-edition \
   chromium \
   flashplugin \
   gimp \
