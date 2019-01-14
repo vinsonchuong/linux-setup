@@ -87,6 +87,10 @@
   mkdir /mnt/var && mount -o defaults,noatime,discard /dev/nvme0n1p3 /mnt/var
   mkdir /mnt/home && mount -o defaults,noatime,discard /dev/nvme0n1p4 /mnt/home
   ```
+* Mark the EFI partition
+  ```sh
+  mkdir /mnt/boot/EFI
+  ```
 
 ## Installing the Base System
 * Install needed packages:
@@ -94,7 +98,7 @@
 echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 pacstrap /mnt base base-devel \
   pacman-contrib \
-  efibootmgr intel-ucode \
+  efibootmgr intel-ucode fwupd \
   dosfstools haveged openssh \
   tlp acpi_call iw ethtool lsb-release smartmontools x86_energy_perf_policy \
   iw wpa_supplicant dnsmasq nftables \
