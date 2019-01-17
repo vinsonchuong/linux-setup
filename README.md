@@ -101,7 +101,7 @@ pacstrap /mnt base base-devel \
   efibootmgr intel-ucode fwupd \
   dosfstools haveged openssh \
   tlp acpi_call iw ethtool lsb-release smartmontools x86_energy_perf_policy \
-  iw wpa_supplicant dnsmasq nftables \
+  iw wpa_supplicant dnsmasq nftables wireless_tools \
   xf86-input-libinput xf86-input-wacom \
   xf86-video-intel libva-intel-driver libvdpau-va-gl \
   xorg-server xorg-apps \
