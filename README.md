@@ -175,6 +175,7 @@ pacstrap /mnt base base-devel \
     gtk-theme-numix-solarized tmux-solarized16 flavoured \
     dmenu-height \
     gitaur bats-git cloudfoundry-cli heroku-toolbelt \
+    python2-neovim-git \
     stepmania-git antimicro
   sudo aura -Oj
   sudo paccache -r
