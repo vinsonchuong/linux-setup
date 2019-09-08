@@ -203,6 +203,11 @@ pacstrap /mnt base base-devel \
     DisplaySize 310 174
   EndSection
   EOF
+
+  Section "Monitor"
+    Identifier "DP2"
+    DisplaySize 697 392
+  EndSection
   ```
 * Set keyboard and trackpad settings:
   ```sh
