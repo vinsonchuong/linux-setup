@@ -5,11 +5,15 @@ set -o nounset
 set -o pipefail
 
 DEVICE="$1"
-FEED=$(curl -s 'https://www.archlinux.org/feeds/releases/')
-TORRENT=$(echo "$FEED" | grep -o '<item>.*<enclosure url="[^"]*' | grep -o '[^"]*$' | head -1)
-FILE="$(basename "${TORRENT%.torrent}")"
+
+FEED=$(curl -s 'https://archlinux.org/feeds/releases/')
+TORRENT=$(echo "$FEED" | xmlstarlet sel --template -v 'rss/channel/item/enclosure/@url' | head -1)
+
 TMP="$(mktemp -d)"
 cd "$TMP"
+
 transmission-get "$TORRENT"
-sudo dd bs=4M if="$FILE" of="$DEVICE" && sync
+ISO_FILE="$(ls "$TMP"/*.iso)"
+
+sudo dd bs=4M if="$ISO_FILE" of="$DEVICE" conv=fsync oflag=direct status=progress && sync
 rm -rf "$TMP"
