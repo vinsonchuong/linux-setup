@@ -6,7 +6,7 @@ set -o pipefail
 
 USERNAME="$1"
 
-useradd -m -G 'users,wheel,libvirt' -s /bin/zsh "$USERNAME"
+useradd -m -G 'users,wheel' -s /bin/zsh "$USERNAME"
 passwd "$USERNAME"
 cd "/home/$USERNAME"
 rm .bash{_logout,_profile,rc}
