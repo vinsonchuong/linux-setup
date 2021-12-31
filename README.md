@@ -1,10 +1,8 @@
-# Laptop Setup Notes
+# Linux Setup Notes
 
-## BIOS Setup
-* Disable any unused features and enable any useful features
-  * Boot with UEFI only and without CSM support
-  * Disable secure boot
-* Enable Thunderbolt BIOS Assist Mode
+## BIOS Settings
+* Boot with UEFI only and without CSM support
+* Disable secure boot
 * Ensure that USB drives are part of the boot order
 
 ## Writing Installation Media
@@ -13,7 +11,7 @@
   bin/download_arch /dev/sdb
   ```
 
-## Booting Installation Media
+## Boot Installation Media
 * Boot from the USB installation media
 
 ## Networking
@@ -36,12 +34,10 @@
   Label | Mount | Type | Size
   ----- | ----- | ---- | --------
   boot  | /boot | vfat | 512MiB
-  root  | /     | ext4 | 16GiB
-  var   | /var  | ext4 | 512GiB
-  home  | /home | ext4 | ~ 400GiB
+  root  | /     | ext4 | ~928GiB
 * Determine the device name for the main SSD by running
   ```sh
-  lsblk
+  fdisk -l
   ```
 * Wipe the installed SSD (assumed to be named `/dev/nvme0n1`) via
   ```sh
@@ -51,8 +47,6 @@
   ```sh
   gdisk /dev/nvme0n1
   n _ _ +512M ef00
-  n _ _ +16G _
-  n _ _ +512G _
   n _ _ _ _
   w
   ```
@@ -60,32 +54,24 @@
   ```sh
   mkfs.vfat /dev/nvme0n1p1
   mkfs.ext4 /dev/nvme0n1p2
-  mkfs.ext4 /dev/nvme0n1p3
-  mkfs.ext4 /dev/nvme0n1p4
   ```
 * Label the partitions:
   ```sh
   echo 'mtools_skip_check=1' > ~/.mtoolsrc && mlabel -i /dev/nvme0n1p1 ::boot
   e2label /dev/nvme0n1p2 root
-  e2label /dev/nvme0n1p3 var
-  e2label /dev/nvme0n1p4 home
   ```
 * Make `/boot` bootable via UEFI:
   ```sh
-  efibootmgr -d /dev/nvme0n1 -p 1 -c -L 'Arch Linux' -l '/vmlinuz-linux' -u 'root=/dev/nvme0n1p2 rw initrd=/intel-ucode.img initrd=/initramfs-linux.img'
+  efibootmgr -d /dev/nvme0n1 -p 1 -c -L 'Arch Linux' -l '/vmlinuz-linux' -u 'root=/dev/nvme0n1p2 rw initrd=/amd-ucode.img initrd=/initramfs-linux.img'
   ```
 * Set reserved blocks to 0 on ext4 partitions:
   ```sh
   tune2fs -m 0.0 /dev/nvme0n1p2
-  tune2fs -m 0.0 /dev/nvme0n1p3
-  tune2fs -m 0.0 /dev/nvme0n1p4
   ```
 * Mount the partitions
   ```sh
   mount -o defaults,noatime,discard /dev/nvme0n1p2 /mnt
   mkdir /mnt/boot && mount -o defaults,noatime,discard /dev/nvme0n1p1 /mnt/boot
-  mkdir /mnt/var && mount -o defaults,noatime,discard /dev/nvme0n1p3 /mnt/var
-  mkdir /mnt/home && mount -o defaults,noatime,discard /dev/nvme0n1p4 /mnt/home
   ```
 * Mark the EFI partition
   ```sh
@@ -97,47 +83,46 @@
 ```sh
 echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 pacstrap /mnt base base-devel \
+  efibootmgr amd-ucode fwupd \
+  mesa vulkan-radeon libva-mesa-driver mesa-vdpau \
+  greetd sway xorg-xwayland waybar otf-font-awesome wofi \
+
+  lm_sensors \
+  pipewire pipewire-alsa pipewire-pulse alsa-utils pavucontrol \
+
+  alacritty tmux zsh zsh-completions \
+
+  noto-fonts noto-fonts-extra noto-fonts-cjk noto-fonts-emoji \
+
+  man-db man-pages \
+  firefox-developer-edition \
+  atool bzip2 cpio gzip lhasa lzop p7zip tar unace unrar unzip xz zip \
+  git hub github-cli \
+  pass wl-clipboard \
+
   pacman-contrib \
-  efibootmgr intel-ucode fwupd \
-  dosfstools haveged openssh \
-  tlp acpi_call iw ethtool lsb-release smartmontools x86_energy_perf_policy \
-  iw wpa_supplicant dnsmasq nftables wireless_tools \
-  xf86-input-libinput xf86-input-wacom \
-  xf86-video-intel libva-intel-driver libvdpau-va-gl \
-  xorg-server xorg-apps \
-  alsa-utils pulseaudio pulseaudio-alsa \
-  gstreamer gst-libav gst-plugins-base gst-plugins-good gstreamer-vaapi \
-  lightdm lightdm-gtk-greeter accountsservice \
+  dosfstools openssh \
+  iw ethtool lsb-release \
+  wpa_supplicant nftables wireless_tools \
   di colordiff \
   the_silver_searcher \
   atool bzip2 cpio gzip lha xz lzop p7zip tar unace unrar zip unzip \
-  zsh zsh-completions \
   neovim python-neovim xclip \
   zathura zathura-djvu zathura-pdf-mupdf zathura-ps zathura-cb \
   feh \
   mpv \
-  beets python-beautifulsoup4 python-pylast python-requests imagemagick python-xdg \
   mediainfo \
   gphoto2 \
   darktable \
   i3 gnome-icon-theme ttf-dejavu \
-  rxvt-unicode \
-  tmux \
-  firefox firefox-developer-edition \
   chromium \
-  flashplugin \
   gimp \
   pass \
-  virt-manager libvirt ebtables dnsmasq bridge-utils gnu-netcat qemu dmidecode \
   docker \
-  cmake ctags gconf \
-  python python-pip \
-  ruby ruby-bundler ruby-rdoc \
   nodejs npm yarn \
   jdk10-openjdk \
   git hub \
   certbot \
-  postgresql postgresql-old-upgrade \
   jq
 ```
 * Generate the `fstab` via
@@ -148,15 +133,15 @@ pacstrap /mnt base base-devel \
   ```sh
   arch-chroot /mnt /bin/bash
 
-  systemd-firstboot --locale=en_US.UTF-8 --timezone=America/Los_Angeles --hostname=laptop
   sed -i '/^#en_US\.UTF-8 UTF-8/s/#//' /etc/locale.gen
   locale-gen
+  systemd-firstboot --locale=en_US.UTF-8 --timezone=America/Los_Angeles --hostname=laptop
   hwclock --systohc --utc
   echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
-  systemctl enable systemd-timesyncd haveged tlp tlp-sleep
+  systemctl enable systemd-timesyncd
 
-  git clone https://github.com/vinsonchuong/laptop /root/laptop
+  git clone https://github.com/vinsonchuong/linux-setup /root/linux-setup
   ```
 * Setup user account
   ```sh
@@ -168,11 +153,17 @@ pacstrap /mnt base base-devel \
   bash <(curl aur.sh) -si --noconfirm aura-bin
   rm -rf aura-bin
   sudo aura --noconfirm -Aya \
+    wev \
+    gtk3-theme-numix-solarized papirus-icon-theme \
+    tmux-solarized16 \
+
+
+
+    flavoured \
     fonts-meta-extended-lt \
     google-musicmanager qtwebkit-bin \
     insync \
     hostsblock \
-    gtk-theme-numix-solarized tmux-solarized16 flavoured \
     dmenu-height \
     gitaur bats-git cloudfoundry-cli heroku-toolbelt \
     python2-neovim-git \
@@ -184,10 +175,12 @@ pacstrap /mnt base base-devel \
   ```
 * Setup login manager:
   ```sh
-  sed 's/#autologin-user=/autologin-user=vinsonchuong/' -i /etc/lightdm/lightdm.conf
-  groupadd -r autologin
-  gpasswd -a vinsonchuong autologin
-  systemctl enable lightdm
+  cat <<EOF >> /etc/greetd/config.toml
+  [initial_session]
+  command = "sway"
+  user = "vinsonchuong"
+  EOF
+  systemctl enable greetd
   ```
 * Configure Fonts:
   ```sh
@@ -202,12 +195,12 @@ pacstrap /mnt base base-devel \
     Identifier "eDP1"
     DisplaySize 310 174
   EndSection
-  EOF
 
   Section "Monitor"
     Identifier "DP2"
     DisplaySize 697 392
   EndSection
+  EOF
   ```
 * Set keyboard and trackpad settings:
   ```sh
@@ -289,24 +282,6 @@ blocklists=(
   echo 'hostsdir=/etc/hosts.d' >> /etc/dnsmasq.conf
 
   systemctl enable hostsblock.timer
-  ```
-* Setup PostgreSQL:
-  ```sh
-  systemctl enable postgresql
-
-	su postgres -c 'initdb -D /var/lib/postgres/data'
-
-  mkdir /run/postgresql
-  chown postgres:postgres /run/postgresql
-  su postgres -c 'pg_ctl -s -D /var/lib/postgres/data start -w -t 120'
-
-	for user in $(groupmems -g users -l)
-	do
-		su postgres -c "createuser -dw '${user}'"
-	done
-
-  su postgres -c 'pg_ctl -s -D /var/lib/postgres/data stop -m fast'
-  rm -rf /run/postgresql
   ```
 * Setup libvirt
   ```sh
