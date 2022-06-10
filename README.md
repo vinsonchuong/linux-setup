@@ -85,20 +85,41 @@ echo 'Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch' > /etc/pacma
 pacstrap /mnt base base-devel \
   efibootmgr amd-ucode fwupd \
   mesa vulkan-radeon libva-mesa-driver mesa-vdpau \
-  greetd sway xorg-xwayland waybar otf-font-awesome wofi \
+  greetd sway xorg-xwayland mako waybar otf-font-awesome wofi \
 
   lm_sensors \
+
   pipewire pipewire-alsa pipewire-pulse alsa-utils pavucontrol \
 
   alacritty tmux zsh zsh-completions \
 
   noto-fonts noto-fonts-extra noto-fonts-cjk noto-fonts-emoji \
 
+  docker \
+
   man-db man-pages \
   firefox-developer-edition \
+  mpv \
+  mpd ncmpcpp beets python-requests \
+  aria2 \
   atool bzip2 cpio gzip lhasa lzop p7zip tar unace unrar unzip xz zip \
   git hub github-cli \
-  pass wl-clipboard \
+  pass gcr wl-clipboard \
+  nodejs npm yarn \
+  python-pip \
+
+  mediainfo \
+
+  obs-studio qt5-wayland xdg-desktop-portal-wlr \
+
+  bottom exa fd \
+  btop \
+
+  neovim ripgrep \
+
+  imv \
+
+  qemu-full \
 
   pacman-contrib \
   dosfstools openssh \
@@ -106,22 +127,13 @@ pacstrap /mnt base base-devel \
   wpa_supplicant nftables wireless_tools \
   di colordiff \
   the_silver_searcher \
-  atool bzip2 cpio gzip lha xz lzop p7zip tar unace unrar zip unzip \
-  neovim python-neovim xclip \
   zathura zathura-djvu zathura-pdf-mupdf zathura-ps zathura-cb \
-  feh \
-  mpv \
-  mediainfo \
   gphoto2 \
   darktable \
-  i3 gnome-icon-theme ttf-dejavu \
   chromium \
   gimp \
   pass \
   docker \
-  nodejs npm yarn \
-  jdk10-openjdk \
-  git hub \
   certbot \
   jq
 ```
@@ -143,6 +155,13 @@ pacstrap /mnt base base-devel \
 
   git clone https://github.com/vinsonchuong/linux-setup /root/linux-setup
   ```
+* Some AMD motherboards prevent suspend from working without additional configuration:
+  ```sh
+  cat <<EOF >> /etc/tmpfiles.d/10-disable-amd-wake.conf
+  # Path              Mode UID GID Age Argument
+  w /proc/acpi/wakeup -    -   -   -   GPP0
+  EOF
+  ```
 * Setup user account
   ```sh
   /root/laptop/bin/mksudoer vinsonchuong
@@ -157,15 +176,20 @@ pacstrap /mnt base base-devel \
     gtk3-theme-numix-solarized papirus-icon-theme \
     tmux-solarized16 \
 
+    hostsblock \
+
+    zulu-11-bin \
+
+    firefox-tridactyl-native-bin \
+
+    aaxtomp3 grive \
 
 
     flavoured \
     fonts-meta-extended-lt \
     google-musicmanager qtwebkit-bin \
     insync \
-    hostsblock \
-    dmenu-height \
-    gitaur bats-git cloudfoundry-cli heroku-toolbelt \
+    gitaur bats-git \
     python2-neovim-git \
     stepmania-git antimicro
   sudo aura -Oj
@@ -187,45 +211,6 @@ pacstrap /mnt base base-devel \
   ln -s /etc/fonts/conf.avail/10-sub-pixel-rgb.conf /etc/fonts/conf.d
   ln -s /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
   ln -s /etc/fonts/conf.avail/30-infinality-aliases.conf /etc/fonts/conf.d
-  ```
-* Set monitor DPI:
-  ```sh
-  cat <<EOF >> /etc/X11/xorg.conf.d/10-monitor.conf
-  Section "Monitor"
-    Identifier "eDP1"
-    DisplaySize 310 174
-  EndSection
-
-  Section "Monitor"
-    Identifier "DP2"
-    DisplaySize 697 392
-  EndSection
-  EOF
-  ```
-* Set keyboard and trackpad settings:
-  ```sh
-  cat <<EOF >> /etc/X11/xorg.conf.d/10-keyboard.conf
-Section "InputClass"
-	Identifier "AT Translated Set 2 keyboard"
-	MatchProduct "AT Translated Set 2 keyboard"
-	Option "XkbOptions" "caps:super,altwin:prtsc_rwin,ctrl:swap_lalt_lctl"
-EndSection
-
-Section "InputClass"
-	Identifier "Topre Corporation HHKB Professional"
-	MatchProduct "Topre Corporation HHKB Professional"
-	Option "XkbOptions" "ctrl:swap_lwin_lctl"
-EndSection
-  EOF
-
-  cat <<EOF >> /etc/X11/xorg.conf.d/10-trackpad.conf
-Section "InputClass"
-	Identifier "Trackpad"
-	MatchIsTouchpad "on"
-	Driver "libinput"
-	Option "Tapping" "on"
-EndSection
-  EOF
   ```
 * Setup Networking
   ```sh
@@ -262,6 +247,15 @@ server=1.0.0.1
   ```
 * Configure Host Blacklist:
   ```sh
+  cp /var/lib/hostsblock/{config.examples/*,}
+  curl https://v.firebog.net/hosts/lists.php?type=nocross > /var/lib/hostsblock/block.urls
+  mkdir /var/lib/hostsblock/cache
+  chmod 0700 /var/lib/hostsblock/cache
+  chown hostsblock:hostsblock /var/lib/hostsblock/*
+  systemctl enable hostsblock.timer hostsblock-hosts-clobber.path
+
+
+
   cat <<EOF >> /var/lib/hostsblock/hostsblock.conf
 blocklists=(
   'http://support.it-mate.co.uk/downloads/HOSTS.txt'
