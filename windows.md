@@ -95,7 +95,22 @@ qemu-system-x86_64 \
 ### References
 - [Download Windows 11](https://www.microsoft.com/en-us/software-download/windows11)
 
-## Running the VM
+## Using Absolute Mouse Coordinates
+Out of the box, the mouse position of the host will fall out of sync with the
+mouse position in the VM.
+
+```sh
+qemu-system-x86_64 \
+  -usb \
+  -device usb-tablet,bus=usb-bus.0
+```
+
+### References
+- [Host mouse pointer not aligned with guest mouse pointer in Qemu VNC](https://unix.stackexchange.com/questions/555082/host-mouse-pointer-not-aligned-with-guest-mouse-pointer-in-qemu-vnc)
+- [General purpose mouse](https://wiki.archlinux.org/title/General_purpose_mouse#QEMU_or_VirtualBox)
+- [USB emulation](https://qemu-project.gitlab.io/qemu/system/devices/usb.html)
+
+## Running the VM And Installing Windows
 ```sh
 qemu-img create -f qcow2 storage.img 128G
 
@@ -118,27 +133,52 @@ qemu-system-x86_64 \
   -cdrom windows11.iso
 ```
 
+## Paravirtualized Block Devices via Virtio
+Doing this should increase disk performance.
 
+Download `virtio-win.iso` from
+[Fedora People](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/).
+
+Then, add the drivers image as a CD and add a dummy hard drive that will use
+the driver:
 
 ```sh
-sleep 1; swtpm socket --tpmstate dir="$PWD/tpm" --ctrl type=unixio,path="$PWD/tpm/socket" --tpm2 --log level=20 & qemu-system-x86_64 \
-  -enable-kvm \
-  -cpu host \
-  -m 4G \
-  -machine q35,smm=on,accel=kvm \
-  -smp cores=2,threads=1 \
-  -hda storage.img \
-  -chardev socket,id=chrtpm,path="$PWD/tpm/socket" \
-  -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0 \
-  -drive if=pflash,format=raw,unit=0,readonly=on,file="$PWD/OVMF_CODE_4M.secboot.fd" \
-  -drive if=pflash,format=raw,unit=1,file="$PWD/OVMF_VARS_4M.fd" \
-  -global driver=cfi.pflash01,property=secure,value=on \
-  -global ICH9-LPC.disable_s3=1
+qemu-img create -f qcow2 dummy.img 1G
+
+qemu-system-x86_64 \
+  -drive file="$PWD/dummy.img",if=virtio \
+  -cdrom "$PWD/virtio-win.iso"
 ```
 
+Once Windows boots, go to the Device Manager, find the SCSI device without
+drivers installed, and update its drivers, pointing to the CD.
 
+Once complete, change the interface of the main drive:
 
+```sh
+qemu-system-x86_64 \
+  -drive file="$PWD/storage.img",if=virtio
+```
 
+### References
+- [Change existing Windows VM to use virtio](https://wiki.archlinux.org/title/QEMU#Change_existing_Windows_VM_to_use_virtio)
+
+## Paravirtualized 3D Graphics
+
+```sh
+qemu-system-x86_64 \
+  -device virtio-vga-gl \
+  -display sdl,gl=on \
+```
+
+### References
+- [Graphic Card: virtio](https://wiki.archlinux.org/title/QEMU#virtio)
+
+## Custom Screen Resolution
+```sh
+qemu-system-x86_64 \
+  -device VGA,edid=on,xres=2000,yres=1000
+```
 
 ## Setting Up a Development Environment
 
