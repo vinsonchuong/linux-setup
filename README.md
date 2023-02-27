@@ -107,10 +107,11 @@ pacstrap /mnt base base-devel \
   pass gcr wl-clipboard \
   nodejs npm yarn \
   python-pip \
+  lua luarocks cmake\
 
   mediainfo \
 
-  obs-studio qt5-wayland xdg-desktop-portal-wlr \
+  obs-studio qt6-wayland xdg-desktop-portal-wlr \
 
   bottom exa fd \
   btop \
@@ -120,6 +121,8 @@ pacstrap /mnt base base-devel \
   imv \
 
   qemu-full \
+
+  ttf-font-awesome \
 
   pacman-contrib \
   dosfstools openssh \
@@ -184,6 +187,9 @@ pacstrap /mnt base base-devel \
 
     aaxtomp3 grive \
 
+    ttf-google-fonts-git \
+
+    nvim-packer-git \
 
     flavoured \
     fonts-meta-extended-lt \
