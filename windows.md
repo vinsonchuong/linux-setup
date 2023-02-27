@@ -164,11 +164,10 @@ qemu-system-x86_64 \
 - [Change existing Windows VM to use virtio](https://wiki.archlinux.org/title/QEMU#Change_existing_Windows_VM_to_use_virtio)
 
 ## Paravirtualized 3D Graphics
-
 ```sh
 qemu-system-x86_64 \
   -device virtio-vga-gl \
-  -display sdl,gl=on \
+  -display sdl,gl=on
 ```
 
 ### References
@@ -183,11 +182,9 @@ qemu-system-x86_64 \
 ## Setting Up a Development Environment
 
 ### Installing WSL
-[ArchWSL](https://github.com/yuk7/ArchWSL)
-WSL vs MinGW vs Cygwin??
-
 In an Administrator PowerShell, run:
 
+#### Ubuntu
 ```PowerShell
 wsl --install
 ```
@@ -202,6 +199,30 @@ sudo apt dist-upgrade
 sudo do-release-upgrade -d
 ```
 
+#### Arch Linux
+With Ubuntu, it's challenging to keep up with the current versions of developer
+tooling. I find that Arch Linux makes this a bit easier.
+
+[ArchWSL](https://github.com/yuk7/ArchWSL) brings Arch Linux to WSL.
+
 #### References
 - [Installing Linux on Windows with WSL](https://docs.microsoft.com/en-us/windows/wsl/install)
-- [How to Upgrade WSL 2 or 1 Ubuntu 20.04 to 22.04 LTS](https://www.how2shout.com/linux/how-to-upgrade-wsl-2-or-1-ubuntu-20-04-to-22-04-lts/)
+
+### Installing OpenSSH
+[Get started with OpenSSH](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
+[OpenSSH key management](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_keymanagement)
+[OpenSSH Server configuration for Windows Server and Windows](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_server_configuration#windows-configurations-in-sshd_config)
+
+```sh
+qemu-system-x86_64 \
+  -net nic \
+  -net user,hostfwd=tcp::20022-:22
+```
+
+```sh
+pacman -Syu
+pacman -S base-devel
+```
+
+#### References
+- [How to SSH from host to guest using QEMU?](https://unix.stackexchange.com/questions/124681/how-to-ssh-from-host-to-guest-using-qemu)
