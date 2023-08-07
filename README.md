@@ -91,6 +91,8 @@ pacstrap /mnt base base-devel \
 
   pipewire pipewire-alsa pipewire-pulse alsa-utils pavucontrol \
 
+  cups cups-pdf avahi nss-mdns \
+
   alacritty tmux zsh zsh-completions \
 
   noto-fonts noto-fonts-extra noto-fonts-cjk noto-fonts-emoji \
